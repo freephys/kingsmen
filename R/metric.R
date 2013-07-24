@@ -8,6 +8,8 @@ hellinger.dist <- function(p,q) {
   sqrt(sum((sqrt(p) - sqrt(q))^2)) / sqrt(2)
 }
 
+parts_greater_than_whole(NULL, groups) %as% FALSE
+
 parts_greater_than_whole(parts, whole) %::% numeric : numeric : logical
 parts_greater_than_whole(parts, whole) %when% {
   any(is.na(parts)) || is.na(whole)
