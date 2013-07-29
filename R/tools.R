@@ -4,12 +4,38 @@
 segment(x) %as% data.frame(a=x[1:(length(x)-1)], b=x[2:length(x)])
 
 #' Split a sequence based on an expression
+slice(x, pivot, inclusive) %::% a : numeric : logical : list
+slice(x, pivot, inclusive=FALSE) %when% {
+  is.null(dim(x))
+} %as% {
+  left <- x[1:pivot]
+  right <- x[(pivot+as.numeric(!inclusive)):length(x)]
+  list(left, right)
+}
+
+slice(x, pivot, inclusive=FALSE) %as%
+{
+  left <- x[1:pivot,]
+  right <- x[(pivot+as.numeric(!inclusive)):nrow(x),]
+  list(left, right)
+}
+
+slice(x, expression) %::% a : logical : list
+slice(x, expression) %when% {
+  is.null(dim(x))
+} %as% {
+  left <- x[expression]
+  right <- x[!expression]
+  list(left, right)
+}
+
 slice(x, expression) %as%
 {
   left <- x[expression,]
   right <- x[!expression,]
   list(left, right)
 }
+
 
 chomp(x, head=1, tail=1) %when% {
   is.null(dim(x))
@@ -32,3 +58,6 @@ partition(x, metric=median, radius=10) %as% {
 }
 
 
+use_default(NULL, default) %as% default
+use_default(NA, default) %as% default
+use_default(x, default) %as% x

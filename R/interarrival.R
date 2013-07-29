@@ -1,4 +1,11 @@
 # :vim set filetype=R
+# Journal of the Operational Research Society
+# Foresight: The International Journal of Applied Forecasting
+# Applied Mathematics and Computation - Elsevier
+# European Journal of Operational Research - Elsevier
+# Computers & Operations Research - Elsevier
+# International Journal of Production Economics
+# 
 
 is_valid_cluster(z, groups) %::% matrix : integer : logical
 is_valid_cluster(z, groups) %as% {
