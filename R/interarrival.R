@@ -7,6 +7,59 @@
 # International Journal of Production Economics
 # 
 
+#' Divide transaction stream into distinct continguous clusters
+#'
+#' This method is less susceptible to noise than a direct 
+#' clustering approach using only interarrival rates.
+#'
+#' @author Brian Lee Yung Rowe
+#' @keywords cluster
+#' @examples
+#' d <- Sys.Date() + cumsum(round(c(runif(20,5,10), runif(20,25,30))))
+#' d <- Sys.Date() + cumsum(round(c(rnorm(20,10,4), rnorm(20,25,10))))
+#' d <- Sys.Date() + cumsum(round(c(rnorm(20,15,6), rnorm(20,25,10))))
+#' d <- Sys.Date() + cumsum(round(c(rnorm(20,5,1), rnorm(20,15,3), rnorm(20,45,5))))
+#' e <- Event(d, abs(rnorm(length(d))))
+#' divide(e)
+divide(event, method='complete', levels=1, plot=TRUE, ...) %when% {
+  nrow(event) > 5
+} %as% {
+  z <- partition(interarrival(event$date), ...)
+  #z <- z[2:(nrow(z)-1),]
+  if (any(is.na(z))) return(NA)
+
+  egroup <- event_group(event, z, method, levels)
+  if (plot) plot(egroup)
+  summary(egroup)
+}
+
+#' Determine whether a cluster is valid
+#'
+#' If a cluster minimizes distance between points, then it is 
+#' considered to be a valid cluster.
+#'
+#' With hierarchical clustering techniques it is difficult to know
+#' whether the set of clusters produced are valid. Typically this
+#' is left to interpretation and must be 'eye-balled' to choose
+#' the cutoff point as well as decide whether the cluster boundaries
+#' make sense.
+#'
+#' For an automated system, such a manual decision point is 
+#' undesirable and must be replaced by automatic process.
+#' Since this data is multidimensional, one approach is to use a 
+#' distance metric or other mathematical property as a heuristic.
+#' This function uses accepts a group of clusters if the sum
+#' of the variances of the distance within each cluster is less
+#' than the variance of the distance as a single cluster.
+#' 
+#' @name is_valid_cluster
+#' @param z An n x 2 matrix of points
+#' @param groups A vector of group associations
+#' @author Brian Lee Yung Rowe
+#' @keywords data
+#' @examples
+is_valid_cluster(NULL, groups) %as% TRUE
+
 is_valid_cluster(z, groups) %::% matrix : integer : logical
 is_valid_cluster(z, groups) %as% {
   vz <- var(dist(z))
@@ -16,6 +69,21 @@ is_valid_cluster(z, groups) %as% {
 }
 
 
+#' Bind dates to cluster information
+#'
+#' Pad cluster group information and attach dates.
+#'
+#' Since the group information is based on interarrival data,
+#' which is then partitioned, the effective length of the data set
+#' shrinks. This function expands the group data so that it matches
+#' the length of the input data.
+#'
+#' @name bind_clusters
+#' @param groups
+#' @param dates
+#' @author Brian Lee Yung Rowe
+#' @keywords data
+#' @examples
 bind_clusters(groups, dates) %as% {
   # Pad cluster information to fit original data
   padded <- c(rep(groups[1],2), groups, rep(tail(groups,1),1))
@@ -23,11 +91,33 @@ bind_clusters(groups, dates) %as% {
   padded
 }
 
-non_zero_diff(x) %as% {
+#' Get differences omitting masked results
+#'
+#' @author Brian Lee Yung Rowe
+#' @keywords data
+#' @examples
+mask_diff(x, mask=0) %as% {
   y <- diff(x)
-  names(y[y != 0])
+  names(y[y != mask])
 }
 
+#' Group interarrival rates into clusters
+#'
+#' Use hierarchical clustering to group interarrival rates together.
+#'
+#' @section Usage:
+#'
+#' @name event_group
+#' @param event
+#' @param part
+#' @param method
+#' @param levels
+#' @author Brian Lee Yung Rowe
+#' @keywords cluster
+#' @examples
+#' d <- Sys.Date() + cumsum(round(c(runif(20,5,10), runif(20,25,30))))
+#' e <- Event(d, abs(rnorm(length(d))))
+#' g <- event_group(e)
 event_group(event, part, method, levels) %as% {
   dz <- dist(part)
   h <- hclust(dz, method=method)
@@ -36,11 +126,7 @@ event_group(event, part, method, levels) %as% {
   EventGroup(event, group, part, h$height)
 }
 
-#' This acts as the control
-#' @example
-#' d <- Sys.Date() + cumsum(round(c(runif(20,5,10), runif(20,25,30))))
-#' e <- Event(data.frame(date=d, amount=abs(rnorm(length(d)))))
-#' g <- event_group(e)
+# This acts as the control
 event_group(event, method='complete', levels=1) %as% {
   dz <- dist(interarrival(event$date))
   h <- hclust(dz, method=method)
@@ -50,12 +136,31 @@ event_group(event, method='complete', levels=1) %as% {
 }
 
 #' Represents a sequence of events
+#'
+#' An ordered sequence of events. This is essentially a list of tuples
+#' containing a date and an amount (some arbitrary value associated
+#' with the date).
+#'
+#' @author Brian Lee Yung Rowe
+#' @keywords cluster
+#' @examples
+#' d <- Sys.Date() + cumsum(round(c(runif(20,5,10), runif(20,25,30))))
+#' e <- Event(d, abs(rnorm(length(d))))
+Event(date, amount) %as% data.frame(date=date, amount=amount)
+
 Event(df) %when% {
   df %hasa% date
   df %hasa% amount
 } %as% df
 
+
 #' Represents a cluster of transaction events
+#'
+#'
+#'
+#' @author Brian Lee Yung Rowe
+#' @keywords cluster
+#' @examples
 EventGroup(event, group, part, height) %as%
   list(event=event,
     group=group,
@@ -65,6 +170,10 @@ EventGroup(event, group, part, height) %as%
 
 
 #' Plot an EventGroup
+#'
+#' @author Brian Lee Yung Rowe
+#' @keywords cluster
+#' @examples
 plot.EventGroup(egroup, main='Event stream') %when% {
   is.null(egroup$part)
 } %as% {
@@ -109,10 +218,14 @@ plot.EventGroup(egroup, main='Event stream') %as% {
 }
 
 #' Provide a summary of an EventGroup
+#'
+#' @author Brian Lee Yung Rowe
+#' @keywords cluster
+#' @examples
 summary.EventGroup(egroup) %as% {
   attach(egroup)
   on.exit(detach('egroup'))
-  delta <- non_zero_diff(group)
+  delta <- mask_diff(group)
   flog.info("Transition points: %s", paste(delta, collapse=','))
 
   bounds <- range(event$date)
@@ -134,10 +247,15 @@ summary.EventGroup(egroup) %as% {
 }
 
 
+#' Return the value of regime or NA
 active_regime(regime, FALSE) %as% NA
 active_regime(regime, TRUE) %as% regime
 
-#' Calculates interarrival times
+#' Calculate interarrival times
+#'
+#' @author Brian Lee Yung Rowe
+#' @keywords cluster
+#' @examples
 interarrival(dates) %::% character : difftime
 interarrival(dates) %as% interarrival(as.Date(dates))
 
@@ -148,24 +266,5 @@ interarrival(dates) %as% {
   i <- diff(dates)
   names(i) <- dates[2:length(dates)]
   i
-}
-
-#' Divide transaction stream into distinct continguous clusters
-#' @examples
-#' d <- Sys.Date() + cumsum(round(c(runif(20,5,10), runif(20,25,30))))
-#' d <- Sys.Date() + cumsum(round(c(rnorm(20,10,4), rnorm(20,25,10))))
-#' d <- Sys.Date() + cumsum(round(c(rnorm(20,5,1), rnorm(20,15,3), rnorm(20,45,5))))
-#' e <- Event(data.frame(date=d, amount=abs(rnorm(length(d)))))
-#' divide(e)
-divide(event, method='complete', levels=1, plot=TRUE, ...) %when% {
-  nrow(event) > 5
-} %as% {
-  z <- partition(interarrival(event$date), ...)
-  #z <- z[2:(nrow(z)-1),]
-  if (any(is.na(z))) return(NA)
-
-  egroup <- event_group(event, z, method, levels)
-  if (plot) plot(egroup)
-  summary(egroup)
 }
 
