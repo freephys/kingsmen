@@ -17,7 +17,9 @@
 #' @aliases kingsmen-package kingsmen
 #' @docType package
 #' @exportPattern "^[^\\.]"
+#' @import import(lambda.r, lambda.tools, futile.logger, plyr)
 #' @author Brian Lee Yung Rowe <r@@zatonovo.com>
 #' @seealso \code{\link{divide}}
 #' @keywords package cluster
 #' @examples
+NULL

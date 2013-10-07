@@ -9,9 +9,6 @@
 \description{
   Return the value of regime or NA
 }
-\examples{
-active_regime(r, TRUE)
-}
 \author{
   Brian Lee Yung Rowe
 }
