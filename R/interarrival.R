@@ -12,15 +12,23 @@
 #' This method is less susceptible to noise than a direct 
 #' clustering approach using only interarrival rates.
 #'
+#' @name divide
+#' @param event An Event object
+#' @param method Passed to hclust to specify the clustering algorithm
+#' @param levels Number of levels to use when cutting the tree
+#' @param plot Specify whether a plot be generated
+#' @param \dots Additional arguments to pass to \code{partition}
 #' @author Brian Lee Yung Rowe
 #' @keywords cluster
 #' @examples
-#' d <- Sys.Date() + cumsum(round(c(runif(20,5,10), runif(20,25,30))))
-#' d <- Sys.Date() + cumsum(round(c(rnorm(20,10,4), rnorm(20,25,10))))
 #' d <- Sys.Date() + cumsum(round(c(rnorm(20,15,6), rnorm(20,25,10))))
-#' d <- Sys.Date() + cumsum(round(c(rnorm(20,5,1), rnorm(20,15,3), rnorm(20,45,5))))
 #' e <- Event(d, abs(rnorm(length(d))))
-#' divide(e)
+#' divide(e, plot=FALSE)
+#
+# Some others to try
+# d <- Sys.Date() + cumsum(round(c(runif(20,5,10), runif(20,25,30))))
+# d <- Sys.Date() + cumsum(round(c(rnorm(20,10,4), rnorm(20,25,10))))
+# d <- Sys.Date() + cumsum(round(c(rnorm(20,5,1), rnorm(20,15,3), rnorm(20,45,5))))
 divide(event, method='complete', levels=1, plot=TRUE, ...) %when% {
   nrow(event) > 5
 } %as% {
@@ -56,8 +64,7 @@ divide(event, method='complete', levels=1, plot=TRUE, ...) %when% {
 #' @param z An n x 2 matrix of points
 #' @param groups A vector of group associations
 #' @author Brian Lee Yung Rowe
-#' @keywords data
-#' @examples
+#' @keywords cluster
 is_valid_cluster(NULL, groups) %as% TRUE
 
 is_valid_cluster(z, groups) %::% matrix : integer : logical
@@ -82,8 +89,7 @@ is_valid_cluster(z, groups) %as% {
 #' @param groups
 #' @param dates
 #' @author Brian Lee Yung Rowe
-#' @keywords data
-#' @examples
+#' @keywords cluster
 bind_clusters(groups, dates) %as% {
   # Pad cluster information to fit original data
   padded <- c(rep(groups[1],2), groups, rep(tail(groups,1),1))
@@ -93,13 +99,51 @@ bind_clusters(groups, dates) %as% {
 
 #' Get differences omitting masked results
 #'
+#' @name mask_diff
+#' @param x A vector
+#' @param mask The value(s) to remove from the diff results
 #' @author Brian Lee Yung Rowe
-#' @keywords data
+#' @keywords manip
 #' @examples
+#' a <- round(runif(20,0,4))
+#' mask_diff(a)
 mask_diff(x, mask=0) %as% {
   y <- diff(x)
   names(y[y != mask])
 }
+
+#' Return the value of regime or NA
+#'
+#' @name active_regime
+#' @param regime The current regime
+#' @param .lambda.r_1 Boolean to control switching
+#' @author Brian Lee Yung Rowe
+#' @keywords manip
+#' @examples
+#' active_regime(r, TRUE)
+active_regime(regime, FALSE) %as% NA
+active_regime(regime, TRUE) %as% regime
+
+#' Calculate interarrival times
+#'
+#' @name interarrival
+#' @param dates A sequence of dates
+#' @author Brian Lee Yung Rowe
+#' @keywords cluster
+#' @examples
+#' d <- Sys.Date() + cumsum(round(c(runif(20,5,10), runif(20,25,30))))
+#' interarrival(d)
+interarrival(dates) %::% character : difftime
+interarrival(dates) %as% interarrival(as.Date(dates))
+
+interarrival(dates) %::% Date : difftime
+interarrival(dates) %as% {
+  dates <- unique(dates[order(dates)])
+  i <- diff(dates)
+  names(i) <- dates[2:length(dates)]
+  i
+}
+
 
 #' Group interarrival rates into clusters
 #'
@@ -141,6 +185,7 @@ event_group(event, method='complete', levels=1) %as% {
 #' containing a date and an amount (some arbitrary value associated
 #' with the date).
 #'
+#' @name Event
 #' @author Brian Lee Yung Rowe
 #' @keywords cluster
 #' @examples
@@ -156,11 +201,15 @@ Event(df) %when% {
 
 #' Represents a cluster of transaction events
 #'
+#' Used internally by \code{event_group}.
 #'
-#'
+#' @name EventGroup
+#' @param event
+#' @param group
+#' @param part
+#' @param height
 #' @author Brian Lee Yung Rowe
 #' @keywords cluster
-#' @examples
 EventGroup(event, group, part, height) %as%
   list(event=event,
     group=group,
@@ -171,9 +220,9 @@ EventGroup(event, group, part, height) %as%
 
 #' Plot an EventGroup
 #'
+#' @name plot.Event
 #' @author Brian Lee Yung Rowe
 #' @keywords cluster
-#' @examples
 plot.EventGroup(egroup, main='Event stream') %when% {
   is.null(egroup$part)
 } %as% {
@@ -219,9 +268,9 @@ plot.EventGroup(egroup, main='Event stream') %as% {
 
 #' Provide a summary of an EventGroup
 #'
+#' @name summary.EventGroup
 #' @author Brian Lee Yung Rowe
 #' @keywords cluster
-#' @examples
 summary.EventGroup(egroup) %as% {
   attach(egroup)
   on.exit(detach('egroup'))
@@ -246,25 +295,4 @@ summary.EventGroup(egroup) %as% {
   ps
 }
 
-
-#' Return the value of regime or NA
-active_regime(regime, FALSE) %as% NA
-active_regime(regime, TRUE) %as% regime
-
-#' Calculate interarrival times
-#'
-#' @author Brian Lee Yung Rowe
-#' @keywords cluster
-#' @examples
-interarrival(dates) %::% character : difftime
-interarrival(dates) %as% interarrival(as.Date(dates))
-
-interarrival(dates) %::% Date : difftime
-interarrival(dates) %as% {
-  dates <- unique(dates[order(dates)])
-  #i <- dates[2:length(dates)] - dates[1:(length(dates)-1)]
-  i <- diff(dates)
-  names(i) <- dates[2:length(dates)]
-  i
-}
 

@@ -1,0 +1,22 @@
+Package: kingsmen
+Type: Package
+Title: A technique for detecting regime change in irregular time series
+Version: 1.0.0
+Date: 2013-10-09
+Author: Brian Lee Yung Rowe
+Maintainer: Brian Lee Yung Rowe <r@zatonovo.com>
+Imports:
+    lambda.r (>= 1.1.0),
+    lambda.tools,
+    futile.logger,
+    plyr
+Suggests:
+    testthat
+Description: In time series that are irregular, different processes can be
+    dominant at different points in time.
+License: LGPL-3
+LazyLoad: yes
+Collate:
+    'interarrival.R'
+    'metric.R'
+    'kingsmen-package.R'
