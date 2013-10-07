@@ -119,8 +119,6 @@ mask_diff(x, mask=0) %as% {
 #' @param .lambda.r_1 Boolean to control switching
 #' @author Brian Lee Yung Rowe
 #' @keywords manip
-#' @examples
-#' active_regime(r, TRUE)
 active_regime(regime, FALSE) %as% NA
 active_regime(regime, TRUE) %as% regime
 
