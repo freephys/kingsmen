@@ -16,6 +16,14 @@ kl.dist <- function(p,q) {
     ifelse(p == 0 | q == 0, max(p,q), p * log(p/q))))
 }
 
+print("Environment for kl.dist is\n")
+print(environment(kl.dist))
+print("\n")
+
+print("Enclosing environment for kl.dist is\n")
+print(parent.env(environment(kl.dist)))
+print("\n")
+
 #' Compute the Hellinger distance between two probability
 #' distributions.
 #'
@@ -38,8 +46,8 @@ hellinger.dist <- function(p,q) {
 #' is more than the value of the whole.
 #'
 #' @name parts_greater_than_whole
-#' param parts A vector of values
-#' param whole A scalar representing the collective value of the parts
+#' @param parts A vector of values
+#' @param whole A scalar representing the collective value of the parts
 #' @author Brian Lee Yung Rowe
 #' @keywords array
 #' @examples

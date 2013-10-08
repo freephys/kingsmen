@@ -32,6 +32,7 @@
 divide(event, method='complete', levels=1, plot=TRUE, ...) %when% {
   nrow(event) > 5
 } %as% {
+#divide <- function(event, method='complete', levels=1, plot=TRUE, ...) {
   z <- partition(interarrival(event$date), ...)
   #z <- z[2:(nrow(z)-1),]
   if (any(is.na(z))) return(NA)
@@ -40,6 +41,14 @@ divide(event, method='complete', levels=1, plot=TRUE, ...) %when% {
   if (plot) plot(egroup)
   summary(egroup)
 }
+
+print("Environment for divide is")
+print(environment(divide))
+print("")
+
+print("Enclosing environment for divide is")
+print(parent.env(environment(divide)))
+print("")
 
 #' Determine whether a cluster is valid
 #'
@@ -218,7 +227,9 @@ EventGroup(event, group, part, height) %as%
 
 #' Plot an EventGroup
 #'
-#' @name plot.Event
+#' @name plot.EventGroup
+#' @param egroup An EventGroup object
+#' @param main Plot title
 #' @author Brian Lee Yung Rowe
 #' @keywords cluster
 plot.EventGroup(egroup, main='Event stream') %when% {

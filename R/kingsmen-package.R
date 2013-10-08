@@ -17,9 +17,14 @@
 #' @aliases kingsmen-package kingsmen
 #' @docType package
 #' @exportPattern "^[^\\.]"
-#' @import import(lambda.r, lambda.tools, futile.logger, plyr)
+#' @import lambda.r lambda.tools futile.logger plyr
 #' @author Brian Lee Yung Rowe <r@@zatonovo.com>
 #' @seealso \code{\link{divide}}
 #' @keywords package cluster
 #' @examples
+#' \dontrun{
+#' d <- Sys.Date() + cumsum(round(c(rnorm(20,15,6), rnorm(20,25,10))))
+#' e <- Event(d, abs(rnorm(length(d))))
+#' divide(e)
+#' }
 NULL
