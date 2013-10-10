@@ -16,13 +16,6 @@ kl.dist <- function(p,q) {
     ifelse(p == 0 | q == 0, max(p,q), p * log(p/q))))
 }
 
-print("Environment for kl.dist is\n")
-print(environment(kl.dist))
-print("\n")
-
-print("Enclosing environment for kl.dist is\n")
-print(parent.env(environment(kl.dist)))
-print("\n")
 
 #' Compute the Hellinger distance between two probability
 #' distributions.

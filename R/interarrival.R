@@ -42,13 +42,6 @@ divide(event, method='complete', levels=1, plot=TRUE, ...) %when% {
   summary(egroup)
 }
 
-print("Environment for divide is")
-print(environment(divide))
-print("")
-
-print("Enclosing environment for divide is")
-print(parent.env(environment(divide)))
-print("")
 
 #' Determine whether a cluster is valid
 #'
