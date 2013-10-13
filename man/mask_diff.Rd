@@ -6,8 +6,21 @@
 
   \item{mask}{The value(s) to remove from the diff results}
 }
+\value{
+  The names of a sequence with masked values removed
+}
 \description{
-  Get differences omitting masked results
+  This is a specialized function that gets the names
+  associated with a vector after removing a set of masked
+  values from the sequence.
+}
+\section{Usage}{
+  mask_diff(x, mask=0)
+}
+
+\section{Details}{
+  This is a convenience function and primarily used
+  internally.
 }
 \examples{
 a <- round(runif(20,0,4))

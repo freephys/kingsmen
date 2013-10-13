@@ -7,10 +7,18 @@
 # International Journal of Production Economics
 # 
 
-#' Divide transaction stream into distinct continguous clusters
+#' Divide a stream of events into distinct continguous clusters
 #'
 #' This method is less susceptible to noise than a direct 
 #' clustering approach using only interarrival rates.
+#'
+#' @section Usage:
+#' divide %::% Event : . : numeric : logical : ... : EventGroup
+#' divide(event, method='complete', levels=1, plot=TRUE, ...)
+#'
+#' @section Details:
+#' Irregular time series are challenging to work with since many
+#' statistical approaches require regular observation intervals.
 #'
 #' @name divide
 #' @param event An Event object
@@ -18,116 +26,59 @@
 #' @param levels Number of levels to use when cutting the tree
 #' @param plot Specify whether a plot be generated
 #' @param \dots Additional arguments to pass to \code{partition}
+#' @return The result of divide is an EventGroup object. 
+#' This can be summarized using the standard \code{summary} function.
+#'
 #' @author Brian Lee Yung Rowe
 #' @keywords cluster
 #' @examples
 #' d <- Sys.Date() + cumsum(round(c(rnorm(20,15,6), rnorm(20,25,10))))
 #' e <- Event(d, abs(rnorm(length(d))))
-#' divide(e, plot=FALSE)
+#' g <- divide(e, plot=FALSE)
+#' summary(g)
+#'
 #
 # Some others to try
 # d <- Sys.Date() + cumsum(round(c(runif(20,5,10), runif(20,25,30))))
 # d <- Sys.Date() + cumsum(round(c(rnorm(20,10,4), rnorm(20,25,10))))
 # d <- Sys.Date() + cumsum(round(c(rnorm(20,5,1), rnorm(20,15,3), rnorm(20,45,5))))
+divide(event, method, levels, plot, ...) %::% Event:.:numeric:logical:...:EventGroup
 divide(event, method='complete', levels=1, plot=TRUE, ...) %when% {
   nrow(event) > 5
 } %as% {
-#divide <- function(event, method='complete', levels=1, plot=TRUE, ...) {
   z <- partition(interarrival(event$date), ...)
-  #z <- z[2:(nrow(z)-1),]
   if (any(is.na(z))) return(NA)
 
   egroup <- event_group(event, z, method, levels)
   if (plot) plot(egroup)
-  summary(egroup)
+  egroup
 }
 
 
-#' Determine whether a cluster is valid
+#' Calculate interarrival rates
 #'
-#' If a cluster minimizes distance between points, then it is 
-#' considered to be a valid cluster.
+#' Given a sequence of dates, compute the interarrival rates. 
 #'
-#' With hierarchical clustering techniques it is difficult to know
-#' whether the set of clusters produced are valid. Typically this
-#' is left to interpretation and must be 'eye-balled' to choose
-#' the cutoff point as well as decide whether the cluster boundaries
-#' make sense.
+#' @section Usage:
+#' interarrival %::% character : difftime
+#' interarrival(dates)
 #'
-#' For an automated system, such a manual decision point is 
-#' undesirable and must be replaced by automatic process.
-#' Since this data is multidimensional, one approach is to use a 
-#' distance metric or other mathematical property as a heuristic.
-#' This function uses accepts a group of clusters if the sum
-#' of the variances of the distance within each cluster is less
-#' than the variance of the distance as a single cluster.
-#' 
-#' @name is_valid_cluster
-#' @param z An n x 2 matrix of points
-#' @param groups A vector of group associations
-#' @author Brian Lee Yung Rowe
-#' @keywords cluster
-is_valid_cluster(NULL, groups) %as% TRUE
-
-is_valid_cluster(z, groups) %::% matrix : integer : logical
-is_valid_cluster(z, groups) %as% {
-  vz <- var(dist(z))
-  vs <- sapply(unique(groups), function(g) var(dist(z[groups==g,])) )
-  flog.info("var(dz) = %s, var(groups) = { %s }", vz, paste(vs, collapse=', '))
-  ! parts_greater_than_whole(vs, vz)
-}
-
-
-#' Bind dates to cluster information
+#' interarrival %::% Date : difftime
+#' interarrival(dates)
 #'
-#' Pad cluster group information and attach dates.
-#'
-#' Since the group information is based on interarrival data,
-#' which is then partitioned, the effective length of the data set
-#' shrinks. This function expands the group data so that it matches
-#' the length of the input data.
-#'
-#' @name bind_clusters
-#' @param groups
-#' @param dates
-#' @author Brian Lee Yung Rowe
-#' @keywords cluster
-bind_clusters(groups, dates) %as% {
-  # Pad cluster information to fit original data
-  padded <- c(rep(groups[1],2), groups, rep(tail(groups,1),1))
-  names(padded) <- dates[order(dates)]
-  padded
-}
-
-#' Get differences omitting masked results
-#'
-#' @name mask_diff
-#' @param x A vector
-#' @param mask The value(s) to remove from the diff results
-#' @author Brian Lee Yung Rowe
-#' @keywords manip
-#' @examples
-#' a <- round(runif(20,0,4))
-#' mask_diff(a)
-mask_diff(x, mask=0) %as% {
-  y <- diff(x)
-  names(y[y != mask])
-}
-
-#' Return the value of regime or NA
-#'
-#' @name active_regime
-#' @param regime The current regime
-#' @param .lambda.r_1 Boolean to control switching
-#' @author Brian Lee Yung Rowe
-#' @keywords manip
-active_regime(regime, FALSE) %as% NA
-active_regime(regime, TRUE) %as% regime
-
-#' Calculate interarrival times
+#' @section Details:
+#' This function is a convenience wrapper around difftime to calculate
+#' interarrival rates for irregular time series.
 #'
 #' @name interarrival
 #' @param dates A sequence of dates
+#' @return A sequence of interarrival rates are returned. The length will
+#' always be 1 less than the length of the input dates. Any names
+#' associated with the date sequence are copied over to the return
+#' sequence with the first name dropped. This makes sense since the
+#' first interarrival rate is only available once the event associated
+#' with the second element arrives.
+#'
 #' @author Brian Lee Yung Rowe
 #' @keywords cluster
 #' @examples
@@ -145,17 +96,98 @@ interarrival(dates) %as% {
 }
 
 
+#' Determine whether a cluster is valid
+#'
+#' If a cluster minimizes distance between points, then it is 
+#' considered to be a valid cluster.
+#'
+#' @section Usage:
+#' is_valid_cluster %::% matrix : integer : logical
+#' is_valid_cluster(z, groups)
+#'
+#' @section Details:
+#' With hierarchical clustering techniques it is difficult to know
+#' whether the set of clusters produced are valid. Typically this
+#' is left to interpretation and must be 'eye-balled' to choose
+#' the cutoff point as well as decide whether the cluster boundaries
+#' make sense.
+#'
+#' For an automated system, such a manual decision point is 
+#' undesirable and must be replaced by automatic process.
+#' Since this data is multidimensional, one approach is to use a 
+#' distance metric or other mathematical property as a heuristic.
+#' This function uses accepts a group of clusters if the sum
+#' of the variances of the distance within each cluster is less
+#' than the variance of the distance as a single cluster.
+#' 
+#' @name is_valid_cluster
+#' @param z An n x 2 matrix of points
+#' @param groups A vector of group associations
+#' @return A logical value is returned indicating whether the specified
+#'  groups are considered valid.
+#'
+#' @author Brian Lee Yung Rowe
+#' @keywords cluster
+#'
+is_valid_cluster(z, groups) %::% matrix : integer : logical
+is_valid_cluster(NULL, groups) %as% TRUE
+
+is_valid_cluster(z, groups) %as% {
+  vz <- var(dist(z))
+  vs <- sapply(unique(groups), function(g) var(dist(z[groups==g,])) )
+  flog.info("var(dz) = %s, var(groups) = { %s }", vz, paste(vs, collapse=', '))
+  ! parts_greater_than_whole(vs, vz)
+}
+
+
+#' Get differences omitting masked results
+#'
+#' This is a specialized function that gets the names associated with
+#' a vector after removing a set of masked values from the sequence.
+#'
+#' @section Usage:
+#' mask_diff(x, mask=0)
+#'
+#' @section Details:
+#' This is a convenience function and primarily used internally.
+#'
+#' @name mask_diff
+#' @param x A vector
+#' @param mask The value(s) to remove from the diff results
+#' @return The names of a sequence with masked values removed
+#'
+#' @author Brian Lee Yung Rowe
+#' @keywords manip
+#' @examples
+#' a <- round(runif(20,0,4))
+#' mask_diff(a)
+mask_diff(x, mask=0) %as% {
+  y <- diff(x)
+  names(y[!y %in% mask])
+}
+
 #' Group interarrival rates into clusters
 #'
 #' Use hierarchical clustering to group interarrival rates together.
 #'
 #' @section Usage:
+#' An EventGroup constructed based on the kingsmen technique
+#' event_group(event, part, method, levels)
+#'
+#' This EventGruop acts as the control
+#' event_group(event, method='complete', levels=1)
+#'
+#' @section Details:
+#' This function controls the clustering of the actual event data.
 #'
 #' @name event_group
-#' @param event
-#' @param part
-#' @param method
-#' @param levels
+#' @param event An Event object that represents the events to cluster
+#' @param part A partition table to aid the clustering
+#' @param method The cluster method
+#' @param levels The level of the tree to cut at to define the clusters
+#' @return The result of the function is an EventGroup object. This
+#' can be passed to \code{summary} and \code{plot} for further analysis.
+#'
 #' @author Brian Lee Yung Rowe
 #' @keywords cluster
 #' @examples
@@ -179,6 +211,7 @@ event_group(event, method='complete', levels=1) %as% {
   EventGroup(event, group, NULL, h$height)
 }
 
+
 #' Represents a sequence of events
 #'
 #' An ordered sequence of events. This is essentially a list of tuples
@@ -186,6 +219,11 @@ event_group(event, method='complete', levels=1) %as% {
 #' with the date).
 #'
 #' @name Event
+#' @param date A date vector representing the dates of each event
+#' @param amount A numeric vector representing the actual event
+#' @param df A data.frame that contains a date and amount columns
+#' @return As this is a type constructor, the return is an EventGroup object.
+#'
 #' @author Brian Lee Yung Rowe
 #' @keywords cluster
 #' @examples
@@ -201,13 +239,16 @@ Event(df) %when% {
 
 #' Represents a cluster of transaction events
 #'
-#' Used internally by \code{event_group}.
+#' An EventGroup object contains the result of a clustering operation
+#' on a stream of events.
 #'
 #' @name EventGroup
-#' @param event
-#' @param group
-#' @param part
-#' @param height
+#' @param event An Event object representing the events to divide
+#' @param group A sequence of group assignments
+#' @param part The partition table
+#' @param height The height of the tree
+#' @return As this is a type constructor, the return is an EventGroup object.
+#'
 #' @author Brian Lee Yung Rowe
 #' @keywords cluster
 EventGroup(event, group, part, height) %as%
@@ -297,4 +338,42 @@ summary.EventGroup(egroup) %as% {
   ps
 }
 
+
+#' Bind dates to cluster information
+#'
+#' This function pads cluster group information to match the length
+#' of the original data and attaches dates.
+#'
+#' @section Usage:
+#' bind_clusters(groups, dates)
+#'
+#' @section Details:
+#' Since the group information is based on interarrival data,
+#' which is then partitioned, the effective length of the data set
+#' shrinks. This function expands the group data so that it matches
+#' the length of the input data.
+#'
+#' @name bind_clusters
+#' @param groups A sequence of group information
+#' @param dates The original dates
+#' @return A padded 
+#'
+#' @author Brian Lee Yung Rowe
+#' @keywords cluster
+#'
+bind_clusters(groups, dates) %as% {
+  padded <- c(rep(groups[1],2), groups, rep(tail(groups,1),1))
+  names(padded) <- dates[order(dates)]
+  padded
+}
+
+#' Return the value of regime or NA
+#'
+#' @name active_regime
+#' @param regime The current regime
+#' @param .lambda.r_1 Boolean to control switching
+#' @author Brian Lee Yung Rowe
+#' @keywords manip
+active_regime(regime, FALSE) %as% NA
+active_regime(regime, TRUE) %as% regime
 

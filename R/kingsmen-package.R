@@ -16,7 +16,9 @@
 #' @name kingsmen-package
 #' @aliases kingsmen-package kingsmen
 #' @docType package
-#' @exportPattern "^[^\\.]"
+#' @export divide interarrival is_valid_cluster mask_diff event_group 
+#' @export event_group Event EventGroup
+#' @export kl.dist hellinger.dist parts_greater_than_whole
 #' @import lambda.r lambda.tools futile.logger plyr
 #' @author Brian Lee Yung Rowe <r@@zatonovo.com>
 #' @seealso \code{\link{divide}}

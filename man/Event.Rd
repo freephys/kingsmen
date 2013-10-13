@@ -1,6 +1,20 @@
 \name{Event}
 \alias{Event}
 \title{Represents a sequence of events}
+\arguments{
+  \item{date}{A date vector representing the dates of each
+  event}
+
+  \item{amount}{A numeric vector representing the actual
+  event}
+
+  \item{df}{A data.frame that contains a date and amount
+  columns}
+}
+\value{
+  As this is a type constructor, the return is an
+  EventGroup object.
+}
 \description{
   An ordered sequence of events. This is essentially a list
   of tuples containing a date and an amount (some arbitrary

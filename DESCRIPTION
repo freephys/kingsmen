@@ -6,7 +6,7 @@ Date: 2013-10-09
 Author: Brian Lee Yung Rowe
 Maintainer: Brian Lee Yung Rowe <r@zatonovo.com>
 Imports:
-    lambda.r (>= 1.1.0),
+    lambda.r (>= 1.1.4),
     lambda.tools,
     futile.logger,
     plyr

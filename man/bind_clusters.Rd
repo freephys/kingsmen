@@ -2,14 +2,22 @@
 \alias{bind_clusters}
 \title{Bind dates to cluster information}
 \arguments{
-  \item{groups}{}
+  \item{groups}{A sequence of group information}
 
-  \item{dates}{}
+  \item{dates}{The original dates}
+}
+\value{
+  A padded
 }
 \description{
-  Pad cluster group information and attach dates.
+  This function pads cluster group information to match the
+  length of the original data and attaches dates.
 }
-\details{
+\section{Usage}{
+  bind_clusters(groups, dates)
+}
+
+\section{Details}{
   Since the group information is based on interarrival
   data, which is then partitioned, the effective length of
   the data set shrinks. This function expands the group

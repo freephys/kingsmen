@@ -6,11 +6,20 @@
 
   \item{groups}{A vector of group associations}
 }
+\value{
+  A logical value is returned indicating whether the
+  specified groups are considered valid.
+}
 \description{
   If a cluster minimizes distance between points, then it
   is considered to be a valid cluster.
 }
-\details{
+\section{Usage}{
+  is_valid_cluster %::% matrix : integer : logical
+  is_valid_cluster(z, groups)
+}
+
+\section{Details}{
   With hierarchical clustering techniques it is difficult
   to know whether the set of clusters produced are valid.
   Typically this is left to interpretation and must be
