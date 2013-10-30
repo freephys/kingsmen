@@ -47,7 +47,7 @@ divide(event, method='complete', levels=1, plot=TRUE, ...) %when% {
   nrow(event) > 5
 } %as% {
   z <- partition(interarrival(event$date), ...)
-  if (any(is.na(z))) return(NA)
+  if (any(is.na(z))) stop("NAs in partition data")
 
   egroup <- event_group(event, z, method, levels)
   if (plot) plot(egroup)
@@ -314,6 +314,8 @@ plot.EventGroup(egroup, main='Event stream') %as% {
 #' @name summary.EventGroup
 #' @author Brian Lee Yung Rowe
 #' @keywords cluster
+#' @method summary EventGroup
+#' @S3method summary EventGroup
 summary.EventGroup(egroup) %as% {
   attach(egroup)
   on.exit(detach('egroup'))
