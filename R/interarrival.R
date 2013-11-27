@@ -44,7 +44,7 @@
 # d <- Sys.Date() + cumsum(round(c(rnorm(20,5,1), rnorm(20,15,3), rnorm(20,45,5))))
 divide(event, method, levels, plot, ...) %::% Event:.:numeric:logical:...:EventGroup
 divide(event, method='complete', levels=1, plot=TRUE, ...) %when% {
-  nrow(event) > 5
+  nrow(event) > 10
 } %as% {
   z <- partition(interarrival(event$date), ...)
   if (any(is.na(z))) stop("NAs in partition data")
@@ -364,7 +364,7 @@ summary.EventGroup(egroup) %as% {
 #' @keywords cluster
 #'
 bind_clusters(groups, dates) %as% {
-  padded <- c(rep(groups[1],2), groups, rep(tail(groups,1),1))
+  padded <- c(groups[1], groups, tail(groups,1))
   names(padded) <- dates[order(dates)]
   padded
 }
